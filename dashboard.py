@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -114,18 +113,16 @@ st.markdown("""
 # Cache data fetching to improve performance
 @st.cache_data(ttl=60)
 def fetch_data():
-    url = "http://127.0.0.1:5000/get_data"
+    data=pd.read_csv("web_logs.csv")
     try:
-        logger.info(f"Fetching data from {url}")
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
+        logger.info(f"generating")
         data = response.json()
         if not data:
             logger.warning("No data received from server")
             return pd.DataFrame()
         logger.info(f"Received {len(data)} entries")
         return pd.DataFrame(data)
-    except requests.exceptions.RequestException as e:
+    except exceptions as e:
         logger.error(f"Error fetching data: {e}")
         st.error(f"Failed to fetch data: {e}. Please check the server.")
         return pd.DataFrame()
