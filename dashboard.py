@@ -1,3 +1,5 @@
+import random
+import datetime
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -56,21 +58,21 @@ st.markdown("""
         margin-bottom: 20px;
         max-width: 100%;
         font-size: 12px;
-        max-height: 300px; /* Set a fixed height for tables */
-        overflow-y: auto; /* Enable vertical scrolling */
-        display: block; /* Ensure the table behaves as a block for scrolling */
+        max-height: 300px;
+        overflow-y: auto;
+        display: block;
     }
     .stTable table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: fixed; /* Ensure consistent column widths */
+        table-layout: fixed;
     }
     .stTable thead {
         position: sticky;
         top: 0;
-        background-color: #d0d0d0; /* Darker background for headers */
+        background-color: #d0d0d0;
         z-index: 1;
-        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
     }
     .stTable th {
         padding: 8px;
@@ -81,7 +83,7 @@ st.markdown("""
         overflow: hidden;
         text-overflow: ellipsis;
         font-weight: bold;
-        color: #333; /* Dark text for headers */
+        color: #333;
     }
     .stTable td {
         padding: 8px;
@@ -91,15 +93,14 @@ st.markdown("""
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        color: #000; /* Black text for data cells */
+        color: #000;
     }
     .stTable tbody {
-        background-color: #ffffff; /* White background for table body */
+        background-color: #ffffff;
     }
     .stTable tbody tr:hover {
-        background-color: #f5f5f5; /* Hover effect for rows */
+        background-color: #f5f5f5;
     }
-    /* Ensure horizontal scrolling works with sticky headers */
     .stTable::-webkit-scrollbar {
         height: 8px;
     }
@@ -109,6 +110,7 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
 def generate_data():
     print("Generating data...")  # Debug log
     countries_regions = {
@@ -123,14 +125,12 @@ def generate_data():
         'Australia': ['Oceania', 'Australasia'],
         'South Africa': ['Southern Africa', 'Sub-Saharan Africa']
     }
-
     job_types = [
         'Software Developer', 'Data Scientist', 'Sales Engineer', 'Product Manager', 'UX Designer',
         'Systems Analyst', 'QA Tester', 'DevOps Engineer', 'Business Analyst', 'Cloud Architect',
         'Security Specialist', 'AI Engineer', 'Database Admin', 'IT Support', 'Network Engineer',
         'Technical Writer', 'Mobile Developer', 'Game Developer', 'Data Engineer', 'Machine Learning Scientist'
     ]
-
     service_types = ['SaaS', 'Consulting', 'Support', 'Cloud Storage', 'Analytics', 'Monitoring', 'Training', 'Security', 'AI Platform', 'IoT']
     product_names = [
         'CloudSync Pro', 'DataVault Analytics', 'AI-Predictor', 'SecureNet Firewall', 'StreamFlow CRM',
@@ -148,13 +148,10 @@ def generate_data():
     company_names = ['TechNova', 'DataSync', 'CloudCore', 'InnoWare', 'NetGenius', 'ByteWorks', 'SoftEdge', 'Nexon', 'CodeCrafters', 'SysNova']
 
     data = []
-
     now = datetime.datetime.now()
-
-    for i in range(10000):  
+    for i in range(10000):
         country = random.choice(list(countries_regions.keys()))
         region = random.choice(countries_regions[country])
-
         job = {
             "Job_ID": i + 1,
             "Company_Name": random.choice(company_names),
@@ -184,31 +181,29 @@ def generate_data():
             "Number_of_Sales": random.randint(1, 100),
             "Date": (now - datetime.timedelta(days=random.randint(0, 30))).strftime('%Y-%m-%d'),
             "Timestamp": now.isoformat(),
-            "Promotional_Event": random.choices([True, False], weights=[0.2, 0.8])[0]  # 20% chance of True
+            "Promotional_Event": random.choices([True, False], weights=[0.2, 0.8])[0]
         }
         data.append(job)
-
     print(f"Generated {len(data)} entries")  # Debug log
     return data
 
-# Cache data fetching to improve performance
+# Cache data generation to improve performance
 @st.cache_data(ttl=60)
 def fetch_data():
-    data=pd.read_csv("web_logs.csv")
     try:
-        logger.info(f"generating")
-        data = response.json()
+        logger.info("Generating data locally")
+        data = generate_data()
         if not data:
-            logger.warning("No data received from server")
+            logger.warning("No data generated")
             return pd.DataFrame()
-        logger.info(f"Received {len(data)} entries")
+        logger.info(f"Generated {len(data)} entries")
         return pd.DataFrame(data)
-    except exceptions as e:
-        logger.error(f"Error fetching data: {e}")
-        st.error(f"Failed to fetch data: {e}. Please check the server.")
+    except Exception as e:
+        logger.error(f"Error generating data: {e}")
+        st.error(f"Failed to generate data: {e}. Please upload a dataset.")
         return pd.DataFrame()
 
-# Process uploaded file or fetched data
+# Process uploaded file or generated data
 def process_uploaded_data(uploaded_file):
     if uploaded_file is not None:
         try:
@@ -451,7 +446,7 @@ def main():
     # Load data at the beginning
     raw_df = fetch_data()
     if raw_df.empty:
-        st.error("No data available. Please ensure the Flask server is running at http://127.0.0.1:5000/get_data or upload a dataset.")
+        st.error("No data available. Please upload a dataset.")
         return
     df = process_data(raw_df.copy())
 
@@ -485,7 +480,7 @@ def main():
     if uploaded_file is not None:
         df = process_uploaded_data(uploaded_file)
         if df.empty:
-            st.error("Failed to load uploaded dataset. Using default dataset instead.")
+            st.error("Failed to load uploaded dataset. Using generated dataset instead.")
             df = process_data(raw_df.copy())
         else:
             df = process_data(df)
@@ -507,7 +502,7 @@ def main():
 
     # Main Dashboard
     st.title("📊 Sales Performance Dashboard")
-    st.markdown(f"🕒 **Last Updated:** 2025-05-19 13:14:00")
+    st.markdown(f"🕒 **Last Updated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Add summary statistics in a single row (all metrics now dynamic)
     st.subheader("📌 Key Metrics")
